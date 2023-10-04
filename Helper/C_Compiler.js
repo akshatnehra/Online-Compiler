@@ -42,8 +42,29 @@ async function compileAndRunCode(code, language, input) {
       child.stdin.end();
     });
 
+    // Delete the temporary C file
+    await fs.unlink(cScriptPath);
+
+    // If windows, delete the temporary executable file
+    if (process.platform === 'win32') {
+      await fs.unlink(outFilePath + '.exe');
+    } else {
+      await fs.unlink(outFilePath);
+    }
+
     return output;
   } catch (err) {
+
+    // Delete the temporary C file
+    await fs.unlink(cScriptPath);
+
+    // If windows, delete the temporary executable file
+    if (process.platform === 'win32') {
+      await fs.unlink(outFilePath + '.exe');
+    } else {
+      await fs.unlink(outFilePath);
+    }
+
     throw err;
   }
 }

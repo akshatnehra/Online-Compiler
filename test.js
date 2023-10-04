@@ -40,8 +40,21 @@ async function compileAndRunCode(code, language, input) {
       child.stdin.end();
     });
 
+    // Delete the temporary Java file
+    await fs.unlink(javaScriptPath);
+
+    // Delete the temporary class file
+    await fs.unlink(path.join(__dirname, 'Main.class'));
+
     return output;
   } catch (err) {
+
+    // Delete the temporary Java file
+    await fs.unlink(javaScriptPath);
+
+    // Delete the temporary class file
+    await fs.unlink(path.join(__dirname, 'Main.class'));
+    
     throw err;
   }
 }
