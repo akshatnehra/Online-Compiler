@@ -5,7 +5,13 @@ const app = express();
 app.use(express.json());
 
 // Environment variables
-require('dotenv').config();     
+require('dotenv').config();   
+
+// Routes
+const compileRoute = require('./routes/Compile');
+
+// Use Routes
+app.use('/api/v1/compile', compileRoute);
 
 const port = process.env.PORT || 4000;
 

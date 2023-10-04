@@ -2,10 +2,7 @@ const { exec } = require('child_process');
 const fs = require('fs').promises;
 const path = require('path');
 
-async function compileAndRunCode(code, language, input) {
-  if (language !== 'java') {
-    throw new Error('Unsupported language: ' + language);
-  }
+async function compileAndRunCode(code, input) {
 
   // Create a temporary folder name using the current time in milliseconds
   const name = Date.now();
@@ -61,39 +58,40 @@ async function compileAndRunCode(code, language, input) {
   }
 }
 
-// Example usage for Java:
-(async () => {
-  try {
-    const userCode = `
-import java.util.Scanner;
+// // Example usage for Java:
+// (async () => {
+//   try {
+//     const userCode = `
+// import java.util.Scanner;
 
-public class Main {
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        String name = scanner.nextLine();
-        System.out.println("Hello, " + name);
+// public class Main {
+//     public static void main(String[] args) {
+//         Scanner scanner = new Scanner(System.in);
+//         String name = scanner.nextLine();
+//         System.out.println("Hello, " + name);
 
-        name = scanner.nextLine();
-        System.out.println("Hello, " + name);
+//         name = scanner.nextLine();
+//         System.out.println("Hello, " + name);
 
-        name = scanner.nextLine();
-        System.out.println("Hello, " + name);
-    }
-}
-`;
+//         name = scanner.nextLine();
+//         System.out.println("Hello, " + name);
+//     }
+// }
+// `;
 
-    const language = 'java';
+//     const savedInput = `John
+// Wick
+// Alice`;
 
-    const savedInput = `John
-Wick
-Alice`;
+//     console.log('Saved Input:');
+//     console.log(savedInput);
 
-    console.log('Saved Input:');
-    console.log(savedInput);
+//     const output = await compileAndRunCode(userCode, savedInput);
+//     console.log('Output:', output);
+//   } catch (error) {
+//     console.error('Error:', error);
+//   }
+// })();
 
-    const output = await compileAndRunCode(userCode, language, savedInput);
-    console.log('Output:', output);
-  } catch (error) {
-    console.error('Error:', error);
-  }
-})();
+// Export the compileAndRunCode function
+module.exports.compileJava = compileAndRunCode;
