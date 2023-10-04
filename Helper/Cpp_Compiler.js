@@ -7,13 +7,16 @@ async function compileAndRunCode(code, language, input) {
     throw new Error('Unsupported language: ' + language);
   }
 
+  // Create a temporary C++ file name using the current time in milliseconds
+  const name = Date.now();
+
   // Create a temporary C++ file
-  const cppScriptPath = path.join(__dirname, 'temp.cpp');
+  const cppScriptPath = path.join(__dirname, name + '.cpp');
 
   try {
     await fs.writeFile(cppScriptPath, code);
 
-    const outFilePath = path.join(__dirname, 'temp');
+    const outFilePath = path.join(__dirname, name + "");
 
     const compileCommand = `g++ ${cppScriptPath} -o ${outFilePath}`;
     const executionCommand = `${outFilePath}`;

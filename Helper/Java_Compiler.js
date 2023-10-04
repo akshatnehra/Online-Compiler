@@ -7,14 +7,22 @@ async function compileAndRunCode(code, language, input) {
     throw new Error('Unsupported language: ' + language);
   }
 
-  // Create a temporary Java file
-  const javaScriptPath = path.join(__dirname, 'Main.java');
+  // Create a temporary folder name using the current time in milliseconds
+  const name = Date.now();
+
+  // Create a temporary folder
+  const folderPath = path.join(__dirname, name + '');
+  await fs.mkdir(folderPath);
+
+  // Create a temporary Java file inside the temporary folder 
+  const javaScriptPath = path.join(folderPath, 'Main.java');
+  const javaClassPath = path.join(folderPath, 'Main.class');
 
   try {
     await fs.writeFile(javaScriptPath, code);
 
     const compileCommand = `javac ${javaScriptPath}`;
-    const executionCommand = `java Main`;
+    const executionCommand = `java -cp ${folderPath} Main`;
 
     await new Promise((resolve, reject) => {
       exec(compileCommand, (compileError) => {
@@ -40,20 +48,14 @@ async function compileAndRunCode(code, language, input) {
       child.stdin.end();
     });
 
-    // Delete the temporary Java file
-    await fs.unlink(javaScriptPath);
-
-    // Delete the temporary class file
-    await fs.unlink(path.join(__dirname, 'Main.class'));
+    // Delete the temporary folder
+    await fs.rm(folderPath, { recursive: true });
 
     return output;
   } catch (err) {
 
-    // Delete the temporary Java file
-    await fs.unlink(javaScriptPath);
-
-    // Delete the temporary class file
-    await fs.unlink(path.join(__dirname, 'Main.class'));
+    // Delete the temporary folder
+    await fs.rm(folderPath, { recursive: true });
     
     throw err;
   }

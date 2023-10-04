@@ -7,8 +7,11 @@ async function compileAndRunCode(code, language, input) {
     throw new Error('Unsupported language: ' + language);
   }
 
+  // Create a temporary Python file name using the current time in milliseconds
+    const name = Date.now();
+
   // Create a temporary Python file
-  const pythonScriptPath = path.join(__dirname, 'temp.py');
+  const pythonScriptPath = path.join(__dirname, name + '.py');
 
   try {
     await fs.writeFile(pythonScriptPath, code);
