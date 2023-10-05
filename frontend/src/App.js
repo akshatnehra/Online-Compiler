@@ -5,9 +5,12 @@ import Editor from '@monaco-editor/react';
 
 function App() {
   const editorRef = useRef(null);
+  const inputRef = useRef(null);
   const [fontSize, setFontSize] = useState(20); // Initialize with default font size
   const [selectedTheme, setSelectedTheme] = useState('vs-dark'); // Initialize with the default theme
   const [selectedLanguage, setSelectedLanguage] = useState('cpp'); // Initialize with the default language
+  const [loading, setLoading] = useState(false);
+  const [output, setOutput] = useState('');
 
   // Use the default code snippet based on the selected language
   const defaultCode = defaultCodes[selectedLanguage] || '';
@@ -62,11 +65,61 @@ function App() {
     }
   };
 
+  const handleRunClick = async () => {
+    // Set loading to true when the request is initiated
+    setLoading(true);
+  
+    try {
+      // Make the API request here
+      const response = await fetch('http://localhost:3001/api/v1/compile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code: editorRef.current.getValue(),
+          language: selectedLanguage,
+          input: inputRef.current.value, 
+        }),
+      });
+  
+      // Handle the response here
+      if (response.ok) {
+        const data = await response.json();
+        console.log(data);
+
+        // Update the output state with the received result
+        setOutput(data.result);
+  
+        // After receiving the response, set loading back to false
+        setLoading(false);
+      } else {
+        // Handle error responses here
+        console.error('API Error:', response.statusText);
+        // Set loading to false even in case of an error
+        setLoading(false);
+      }
+    } catch (error) {
+      // Handle any other errors that occur during the request
+      console.error('Request Error:', error);
+      // Set loading to false in case of an error
+      setLoading(false);
+    }
+  };
+  
+  
   return (
     <>
       <main className='bg-[#1e1e1e]'>
+      {loading ? (
+        <div className="absolute inset-0 flex justify-center items-center bg-gray-900 bg-opacity-50">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      ) : null}
         <nav className='h-[6vh] w-full flex items-center bg-[#1e1e1e] py-[2vh]'>
-          <button className='bg-[#e31d3b] h-[4vh] text-white px-3 rounded-3xl ml-5 flex justify-center items-center gap-1 text-[11px] font-bold uppercase'>
+          <button className='bg-[#e31d3b] h-[4vh] text-white px-3 rounded-3xl ml-5 flex justify-center items-center gap-1 text-[11px] font-bold uppercase' onClick={handleRunClick}>
             <FaPlay className='h-[9px]' /> Run
           </button>
 
@@ -141,7 +194,7 @@ function App() {
 
               {/* INPUT BODY */}
               <div className="h-[90%] p-5">
-                <textarea className="w-full h-full outline-none resize-none text-white bg-[#272727] text-lg" placeholder="Enter your input here..."></textarea>
+                <textarea className="w-full h-full outline-none resize-none text-white bg-[#272727] text-lg" placeholder="Enter your input here..." ref={inputRef}></textarea>
               </div>
             </div>
 
@@ -154,7 +207,7 @@ function App() {
 
               {/* INPUT BODY */}
               <div className="h-[90%] p-5">
-                <textarea className="w-full h-full outline-none resize-none text-white bg-[#272727] text-lg pointer-events-none" tabindex="-1"></textarea>
+                <textarea className="w-full h-full outline-none resize-none text-white bg-[#272727] text-lg pointer-events-none" tabindex="-1" value={output}></textarea>
               </div>
             </div>
           </div>

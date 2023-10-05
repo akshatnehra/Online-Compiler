@@ -1,11 +1,15 @@
 const express = require('express');
 const app = express();
+const cors = require('cors');
 
 // Parse incoming JSON into objects
 app.use(express.json());
 
 // Environment variables
-require('dotenv').config();   
+require('dotenv').config();
+
+// Enable CORS for all routes
+app.use(cors());
 
 // Routes
 const compileRoute = require('./routes/Compile');
