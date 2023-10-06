@@ -1,29 +1,35 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { FaPlay } from 'react-icons/fa';
+import { FaPlay, FaDownload } from 'react-icons/fa';
+import { IoReload } from 'react-icons/io5';
 import defaultCodes from './utils/defaultCodes';
 import Editor from '@monaco-editor/react';
+import { saveAs } from 'file-saver';
 
 function App() {
-  const editorRef = useRef(null);
-  const inputRef = useRef(null);
+  const editorRef = useRef(null); // Ref for the editor
+  const inputRef = useRef(null); // Ref for the input textarea
   const [fontSize, setFontSize] = useState(20); // Initialize with default font size
   const [selectedTheme, setSelectedTheme] = useState('vs-dark'); // Initialize with the default theme
   const [selectedLanguage, setSelectedLanguage] = useState('cpp'); // Initialize with the default language
-  const [loading, setLoading] = useState(false);
-  const [output, setOutput] = useState('');
+  const [loading, setLoading] = useState(false); // Initialize with loading set to false
+  const [output, setOutput] = useState(''); // Initialize with empty output
+  const [codeName, setCodeName] = useState('code'); // Initialize with empty code name
 
   // Use the default code snippet based on the selected language
   const defaultCode = defaultCodes[selectedLanguage] || '';
 
+  // Set the language of the editor and default code snippet when the selected language changes
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
     editorRef.current.setValue(defaultCode);
   }
 
+  // Get the value of the editor
   function showValue() {
     alert(editorRef.current.getValue());
   }
 
+  // Handle font size change
   const handleFontSizeChange = (event) => {
     const newSize = parseInt(event.target.value, 10);
     setFontSize(newSize);
@@ -48,10 +54,12 @@ function App() {
     { label: 'JavaScript', value: 'javascript' },
   ];
 
+  // Handle theme change
   const handleThemeChange = (event) => {
     setSelectedTheme(event.target.value);
   };
 
+  // Handle language change
   const handleLanguageChange = (event) => {
     const newLanguage = event.target.value;
     setSelectedLanguage(newLanguage);
@@ -65,9 +73,96 @@ function App() {
     }
   };
 
+  // Handle reset code button click
+  const handleResetCode = () => {
+    // Update the editor value with the default code for the selected language
+    editorRef.current.setValue(defaultCodes[selectedLanguage]);
+  }
+
+  // Handle download code button click
+  const handleDownloadCode = () => {
+    // Get the code from the editor
+    const code = editorRef.current.getValue();
+  
+    // Create a Blob object containing the code
+    const blob = new Blob([code], { type: 'text/plain;charset=utf-8' });
+
+    // Get the extension of the selected language
+    const extension = getExtension();
+
+    // File Name 
+    const fileName = codeName + "." + extension;
+    
+    // Download the file
+    saveAs(blob, fileName);
+  };
+  
+  // Get Extension of the selected language
+  const getExtension = () => {
+    if(selectedLanguage === 'javascript') {
+      return 'js';
+    } else if(selectedLanguage === 'c') {
+      return 'c';
+    } else if(selectedLanguage === 'cpp') {
+      return 'cpp';
+    } else if(selectedLanguage === 'python') {
+      return 'py';
+    } else if(selectedLanguage === 'java') {
+      return 'java';
+    }
+
+    return 'txt';
+  }
+
+  // Handle run button click
   const handleRunClick = async () => {
     // Set loading to true when the request is initiated
     setLoading(true);
+
+    // If selected language is Javascript, run the code in the browser
+    if (selectedLanguage === 'javascript') {
+
+      // Get the input from the input textarea
+      const INPUT = inputRef.current.value;
+
+      // Get the code from the editor and store it in a variable
+      const code = editorRef.current.getValue();
+
+      // Append input before running the code
+      const codeWithInput = `${INPUT}\n${code}`;
+
+      // Store the original console.log function
+      const originalConsoleLog = console.log;
+
+      // Create an array to capture log messages
+      const logMessages = [];
+
+      // Override console.log to capture messages
+      console.log = function (...args) {
+        // Call the original console.log to display the message in the console
+        originalConsoleLog.apply(console, args);
+
+        // Store the message in the logMessages array
+        logMessages.push(args.join(' '));
+      };
+
+      // Run the code
+      eval(code);
+
+      // Get the captured log messages
+      const result = logMessages.join('\n');
+
+      // Restore the original console.log function
+      console.log = originalConsoleLog;
+
+      // Update the output state with the received result
+      setOutput(result);
+
+      // After receiving the response, set loading back to false
+      setLoading(false);
+
+      return;
+    }
   
     try {
       // Make the API request here
@@ -106,6 +201,25 @@ function App() {
       setLoading(false);
     }
   };
+
+  // Handle code name change
+  const handleCodeNameChange = (event) => {
+    if(event.target.value === '') {
+      setCodeName('code');
+      return;
+    }
+
+    setCodeName(event.target.value);
+  }
+
+  // Handle download output button click
+  const handleDownloadOutput = () => {
+    // Create a Blob object containing the output
+    const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
+  
+    // Download the file
+    saveAs(blob, 'output.txt');
+  };
   
   
   return (
@@ -118,52 +232,69 @@ function App() {
           </div>
         </div>
       ) : null}
-        <nav className='h-[6vh] w-full flex items-center bg-[#1e1e1e] py-[2vh]'>
-          <button className='bg-[#e31d3b] h-[4vh] text-white px-3 rounded-3xl ml-5 flex justify-center items-center gap-1 text-[11px] font-bold uppercase' onClick={handleRunClick}>
-            <FaPlay className='h-[9px]' /> Run
-          </button>
+        <nav className='h-[6vh] w-full flex justify-between items-center bg-[#1e1e1e] py-[2vh]'>
+          <div className='flex items-center'>
+            <button className='bg-[#e31d3b] h-[4vh] text-white px-3 rounded-3xl ml-5 flex justify-center items-center gap-1 text-[11px] font-bold uppercase' onClick={handleRunClick}>
+              <FaPlay className='h-[9px]' /> Run
+            </button>
 
-          {/* Dropdown for selecting text size */}
-          <label className='text-white ml-10 text-sm font-bold'>Font Size: </label>
-          <select
-            className='bg-white text-gray-900 ml-3 rounded-md p-1 outline-none'
-            value={fontSize}
-            onChange={handleFontSizeChange}
-          >
-            {fontSizeOptions.map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </select>
+            {/* Dropdown for selecting text size */}
+            <label className='text-white ml-10 text-sm font-bold'>Font Size: </label>
+            <select
+              className='bg-white text-gray-900 ml-3 rounded-md p-1 outline-none'
+              value={fontSize}
+              onChange={handleFontSizeChange}
+            >
+              {fontSizeOptions.map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
 
-          {/* Dropdown for selecting theme */}
-          <label className='text-white ml-5 text-sm font-bold'>Theme: </label>
-          <select
-            className='bg-white text-gray-900 ml-3 rounded-md p-1 w-20 outline-none'
-            value={selectedTheme}
-            onChange={handleThemeChange}
-          >
-            {themeOptions.map((theme) => (
-              <option key={theme.value} value={theme.value}>
-                {theme.label}
-              </option>
-            ))}
-          </select>
+            {/* Dropdown for selecting theme */}
+            <label className='text-white ml-5 text-sm font-bold'>Theme: </label>
+            <select
+              className='bg-white text-gray-900 ml-3 rounded-md p-1 w-20 outline-none'
+              value={selectedTheme}
+              onChange={handleThemeChange}
+            >
+              {themeOptions.map((theme) => (
+                <option key={theme.value} value={theme.value}>
+                  {theme.label}
+                </option>
+              ))}
+            </select>
 
-          {/* Dropdown for selecting programming language */}
-          <label className='text-white ml-5 text-sm font-bold'>Language: </label>
-          <select
-            className='bg-white text-gray-900 ml-3 rounded-md p-1 w-24 outline-none'
-            value={selectedLanguage}
-            onChange={handleLanguageChange}
-          >
-            {languageOptions.map((language) => (
-              <option key={language.value} value={language.value}>
-                {language.label}
-              </option>
-            ))}
-          </select>
+            {/* Dropdown for selecting programming language */}
+            <label className='text-white ml-5 text-sm font-bold'>Language: </label>
+            <select
+              className='bg-white text-gray-900 ml-3 rounded-md p-1 w-24 outline-none'
+              value={selectedLanguage}
+              onChange={handleLanguageChange}
+            >
+              {languageOptions.map((language) => (
+                <option key={language.value} value={language.value}>
+                  {language.label}
+                </option>
+              ))}
+            </select>
+
+            <input type="text" className='ml-56 w-44 px-2 py-[3px] text-sm bg-[#1e1e1e] border-b border-white text-white' value={codeName} onChange={(e) => setCodeName(e.target.value)} onBlur={handleCodeNameChange} />
+
+          </div>
+
+          <div className='flex items-center mr-5'>
+            {/* Reset Code Button */}
+            <button className='bg-[#e31d3b] h-[4vh] text-white px-3 rounded-3xl ml-5 flex justify-center items-center gap-1 text-[11px] font-bold uppercase' onClick={handleResetCode}>
+              <IoReload/> Reset Code
+            </button>
+
+            {/* Download Code Button */}
+            <button className='bg-[#e31d3b] h-[4vh] text-white px-3 rounded-3xl ml-5 flex justify-center items-center gap-1 text-[11px] font-bold uppercase' onClick={handleDownloadCode}>
+              <FaDownload/> Download 
+            </button>
+          </div>
         </nav>
 
         <div className='flex'>
@@ -184,7 +315,7 @@ function App() {
           />
 
           {/* INPUT and OUTPUT CONTAINER */}
-          <div className="flex flex-col w-[30vw] ml-5">
+          <div className="flex flex-col w-[30vw] ml-4">
             {/* INPUT */}
             <div className="h-[47vh] bg-[#272727]  rounded-md">
               {/* INPUT HEADER */}
@@ -201,13 +332,25 @@ function App() {
             {/* OUTPUT */}
             <div className="h-[47vh] bg-[#272727]  rounded-md">
               {/* OUTPUT HEADER */}
-              <div className="h-[10%] pl-5 bg-[#303030] flex items-center">
+              <div className="h-[10%] pl-5 bg-[#303030] flex items-center justify-between">
                 <h3 className="text-white text-lg font-medium">Output</h3>
+
+                <div className='flex '>
+                  {/* Clear Button */}
+                  <button className='hover:bg-[#272727] border border-opacity-30 border-white h-[4vh] text-white px-3 rounded-3xl ml-5 flex justify-center items-center gap-1 text-[11px] font-bold uppercase' onClick={() => setOutput('')}>
+                    Clear
+                  </button>
+
+                  {/** Download Button */}
+                  <button className='hover:bg-[#272727] border border-opacity-30 border-white h-[4vh] mr-5 text-white px-3 rounded-3xl ml-3 flex justify-center items-center gap-1 text-[11px] font-bold uppercase' onClick={handleDownloadOutput}>
+                    <FaDownload/> Download
+                  </button>
+                </div>
               </div>
 
-              {/* INPUT BODY */}
+              {/* OUTPUT BODY */}
               <div className="h-[90%] p-5">
-                <textarea className="w-full h-full outline-none resize-none text-white bg-[#272727] text-lg pointer-events-none" tabindex="-1" value={output}></textarea>
+                <textarea className="w-full h-full outline-none resize-none text-white bg-[#272727] text-lg cursor-default" readOnly value={output}></textarea>
               </div>
             </div>
           </div>
