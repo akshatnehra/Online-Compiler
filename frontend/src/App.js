@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { FaPlay, FaDownload } from 'react-icons/fa';
-import { IoReload } from 'react-icons/io5';
+import { FaPlay, FaDownload, FaSave } from 'react-icons/fa';
+import { IoReload, IoClose } from 'react-icons/io5';
+import { FiEye } from 'react-icons/fi';
 import defaultCodes from './utils/defaultCodes';
 import Editor from '@monaco-editor/react';
 import { saveAs } from 'file-saver';
@@ -14,6 +15,31 @@ function App() {
   const [loading, setLoading] = useState(false); // Initialize with loading set to false
   const [output, setOutput] = useState(''); // Initialize with empty output
   const [codeName, setCodeName] = useState('code'); // Initialize with empty code name
+  const [isModalOpen, setIsModalOpen] = useState(false); // Initialize with modal closed
+  const [isCodeExistsModalOpen, setIsCodeExistsModalOpen] = useState(false); // Initialize with modal closed
+  const [isViewCodeModalOpen, setIsViewCodeModalOpen] = useState(false); // Initialize with modal closed
+  const [savedCodes, setSavedCodes] = useState({}); // Initialize with empty object
+
+  useEffect(() => {
+    // Get all saved codes from localStorage
+    const savedCodesJSON = localStorage.getItem('savedCodes');
+    const savedCodes = savedCodesJSON ? JSON.parse(savedCodesJSON) : {};
+
+    // Set the saved codes state if there are any saved codes
+    if (Object.keys(savedCodes).length > 0) {
+      setSavedCodes(savedCodes);
+    }
+  });
+
+  const handleOpenModal = () => {
+    // Open the modal when the save button is clicked
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    // Close the modal
+    setIsModalOpen(false);
+  };
 
   // Use the default code snippet based on the selected language
   const defaultCode = defaultCodes[selectedLanguage] || '';
@@ -220,7 +246,106 @@ function App() {
     // Download the file
     saveAs(blob, 'output.txt');
   };
+
+  // Handle save code locally button click
+  const handleSaveCodeLocally = () => {
+    // Check if the editorRef is null
+    if (!editorRef.current) {
+      console.error('Editor is not initialized.');
+      return;
+    }
+
+    // Get the code from the editor
+    const code = editorRef.current.getValue();
+
+    // Get the extension of the selected language
+    const extension = getExtension();
+
+    // File Name
+    const fileName = codeName + "." + extension;
+
+    // Check if there are existing saved codes in localStorage
+    const savedCodesJSON = localStorage.getItem('savedCodes');
+    let savedCodes = savedCodesJSON ? JSON.parse(savedCodesJSON) : {};
+
+    // Check if the code already exists
+    if (savedCodes[fileName]) {
+      // If code already exists, show the modal
+      setIsCodeExistsModalOpen(true);
+    } else {
+      // Update the saved codes object with the new code
+      savedCodes[fileName] = { code, language: selectedLanguage };
+
+      // Convert the updated object back to JSON and store it in localStorage
+      localStorage.setItem('savedCodes', JSON.stringify(savedCodes));
+
+      // Show the "Code saved successfully" modal
+      setIsModalOpen(true);
+
+      // Print all saved codes
+      getAllSavedCodes();
+    }
+  };
+
+  const getAllSavedCodes = () => {
+    // Get the saved codes from localStorage
+    const savedCodesJSON = localStorage.getItem('savedCodes');
+    const savedCodes = savedCodesJSON ? JSON.parse(savedCodesJSON) : {};
+
+    console.log('====================================');
+    console.log('Saved Codes');
+    console.log('====================================');
   
+    // Iterate through the saved codes and display them
+    for (const fileName in savedCodes) {
+      if (savedCodes.hasOwnProperty(fileName)) {
+        const { code, language } = savedCodes[fileName];
+  
+        // Display or process each saved code entry as needed
+        console.log(`File Name: ${fileName}`);
+        console.log(`Language: ${language}`);
+        console.log(`Code:\n${code}`);
+      }
+    }
+  };
+
+  // Handle close view codes button click
+  const onCloseViewCode = () => {
+    setIsViewCodeModalOpen(false);
+  }
+
+  // Handle view codes button click
+  const onOpenViewCode = () => {
+    setIsViewCodeModalOpen(true);
+  }
+
+  // Handle replace code
+  const handleReplaceCode = () => {
+    // Close the modal
+    setIsCodeExistsModalOpen(false);
+
+    // Get the code from the editor
+    const code = editorRef.current.getValue();
+
+    // Get the extension of the selected language
+    const extension = getExtension();
+
+    // File Name
+    const fileName = codeName + "." + extension;
+
+    // Get existing saved codes in localStorage
+    const savedCodesJSON = localStorage.getItem('savedCodes');
+    let savedCodes = savedCodesJSON ? JSON.parse(savedCodesJSON) : {};
+
+    // Update the saved codes object with the new code
+    savedCodes[fileName] = { code, language: selectedLanguage };
+
+    // Convert the updated object back to JSON and store it in localStorage
+    localStorage.setItem('savedCodes', JSON.stringify(savedCodes));
+
+    // Show the "Code saved successfully" modal
+    setIsModalOpen(true);
+  }
   
   return (
     <>
@@ -290,9 +415,74 @@ function App() {
               <IoReload/> Reset Code
             </button>
 
+            {/* Already Exists Modal */}
+            {isCodeExistsModalOpen && (
+              <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center z-50">
+                <div className="bg-gray-800 p-4 py-6 px-8 rounded-lg shadow-lg">
+                  <h2 className="text-white text-xl font-semibold mb-2">WARNING ⚠️</h2>
+                  <p className="text-white">This code already Exists!</p>
+                  <button className="bg-[#e31d3b] text-white px-3 py-1 rounded-md mt-4 mr-4" onClick={() => setIsCodeExistsModalOpen(false)}>
+                    Close
+                  </button>
+                  <button className="bg-[#e31d3b] text-white px-3 py-1 rounded-md mt-4" onClick={handleReplaceCode}>
+                    Replace
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Modal */}
+            {isModalOpen && (
+              <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center z-50">
+                <div className="bg-gray-800 p-4 py-6 px-8 rounded-lg shadow-lg"> {/* Updated background color */}
+                  <h2 className="text-white text-xl font-semibold mb-2">Congratulations 🎉</h2>
+                  <p className="text-white">Code Saved Successfully!</p>
+                  <button className="bg-[#e31d3b] text-white px-3 py-1 rounded-md mt-4" onClick={closeModal}>
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Save Code Button */}
+            <button className='bg-[#e31d3b] h-[4vh] text-white px-3 rounded-3xl ml-5 flex justify-center items-center gap-1 text-[11px] font-bold uppercase' onClick={handleSaveCodeLocally}>
+              <FaSave/> Save Code
+            </button>
+
             {/* Download Code Button */}
             <button className='bg-[#e31d3b] h-[4vh] text-white px-3 rounded-3xl ml-5 flex justify-center items-center gap-1 text-[11px] font-bold uppercase' onClick={handleDownloadCode}>
               <FaDownload/> Download 
+            </button>
+
+            {isViewCodeModalOpen && (
+              <div className="fixed top-32 left-1/2 transform -translate-x-1/2 w-full max-w-md z-50 hide-scrollbar">
+                <div className="bg-gray-800 p-4 py-6 px-8 rounded-lg shadow-lg flex flex-col">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-white text-xl font-semibold">List of Saved Codes {savedCodes.length}</h2>
+                    <button className="bg-[#e31d3b] text-white px-3 py-1 rounded-md" onClick={onCloseViewCode}>
+                      <IoClose/>
+                    </button>
+                  </div>
+                  <ul className="text-white max-h-[50vh] overflow-y-auto hide-scrollbar">
+                    {Object.entries(savedCodes).map(([fileName, { language, code }]) => (
+                      <li key={fileName}>
+                        <h3>{fileName}</h3>
+                        <p>Language: {language}</p>
+                        <pre className="text-white bg-gray-600 p-2 mt-2 rounded-md">{code}</pre>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+
+
+
+
+
+            {/* View Codes Button */}
+            <button className='bg-[#e31d3b] h-[4vh] text-white px-3 rounded-3xl ml-5 flex justify-center items-center gap-1 text-[11px] font-bold uppercase' onClick={onOpenViewCode}>
+              <FiEye/> View Codes
             </button>
           </div>
         </nav>
