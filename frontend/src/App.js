@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { FaPlay, FaDownload, FaSave } from 'react-icons/fa';
 import { IoReload, IoClose } from 'react-icons/io5';
 import { FiEye } from 'react-icons/fi';
+import { AiOutlineFile } from 'react-icons/ai';
 import defaultCodes from './utils/defaultCodes';
 import Editor from '@monaco-editor/react';
 import { saveAs } from 'file-saver';
@@ -19,6 +20,7 @@ function App() {
   const [isCodeExistsModalOpen, setIsCodeExistsModalOpen] = useState(false); // Initialize with modal closed
   const [isViewCodeModalOpen, setIsViewCodeModalOpen] = useState(false); // Initialize with modal closed
   const [savedCodes, setSavedCodes] = useState({}); // Initialize with empty object
+  const [isEditorReady, setIsEditorReady] = useState(false); // Initialize with editor ready set to false
 
   useEffect(() => {
     // Get all saved codes from localStorage
@@ -48,6 +50,7 @@ function App() {
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
     editorRef.current.setValue(defaultCode);
+    setIsEditorReady(true);
   }
 
   // Get the value of the editor
@@ -247,6 +250,34 @@ function App() {
     saveAs(blob, 'output.txt');
   };
 
+  // Handle download input button click
+  const handleDownloadInput = () => {
+    // Create a Blob object containing the input
+    const blob = new Blob([inputRef.current.value], { type: 'text/plain;charset=utf-8' });
+
+    // Download the file
+    saveAs(blob, 'input.txt');
+  };
+
+  // Handle read from file button click
+  const readFromFile = (event) => {
+    const selectedFile = event.target.files[0];
+
+    if (selectedFile) {
+      // Create a FileReader instance
+      const reader = new FileReader();
+
+      // Define an event handler for when the file is loaded
+      reader.onload = (e) => {
+        const content = e.target.result;
+        inputRef.current.value = content;
+      };
+
+      // // Read the file as text
+      reader.readAsText(selectedFile);
+    }
+  };
+
   // Handle save code locally button click
   const handleSaveCodeLocally = () => {
     // Check if the editorRef is null
@@ -346,6 +377,53 @@ function App() {
     // Show the "Code saved successfully" modal
     setIsModalOpen(true);
   }
+
+  const handleViewCode = (codeName) => {
+    // Get the saved codes from localStorage
+    const savedCodesJSON = localStorage.getItem('savedCodes');
+    const savedCodes = savedCodesJSON ? JSON.parse(savedCodesJSON) : {};
+
+    // Get the code from the saved codes object
+    const { code } = savedCodes[codeName];
+
+    // Update the editor value with the code
+    editorRef.current.setValue(code);
+
+    // Close the modal
+    setIsViewCodeModalOpen(false);
+
+    // Update the code name and replace the extension with empty string
+    setCodeName(codeName.replace(/\.[^/.]+$/, ""));
+
+    // Update the selected language
+    setSelectedLanguage(savedCodes[codeName].language);
+
+    // Update the editor language
+    if (editorRef.current) {
+      editorRef.current.getModel().setLanguage(savedCodes[codeName].language);
+    }
+  }
+
+  const handleDeleteCode = (codeName) => {
+    // Get the saved codes from localStorage
+    const savedCodesJSON = localStorage.getItem('savedCodes');
+    let savedCodes = savedCodesJSON ? JSON.parse(savedCodesJSON) : {};
+
+    // Delete the code from the saved codes object
+    delete savedCodes[codeName];
+
+    // Convert the updated object back to JSON and store it in localStorage
+    localStorage.setItem('savedCodes', JSON.stringify(savedCodes));
+
+    // Check if same code is open in editor
+    if(codeName === codeName) {
+      // Update the editor value with the default code for the selected language
+      editorRef.current.setValue(defaultCodes[selectedLanguage]);
+
+      // Update the code name
+      setCodeName('code');
+    }
+  }
   
   return (
     <>
@@ -405,7 +483,7 @@ function App() {
               ))}
             </select>
 
-            <input type="text" className='ml-56 w-44 px-2 py-[3px] text-sm bg-[#1e1e1e] border-b border-white text-white' value={codeName} onChange={(e) => setCodeName(e.target.value)} onBlur={handleCodeNameChange} />
+            <input type="text" className='ml-56 w-44 px-2 py-[3px] text-sm bg-[#1e1e1e] border-b border-white text-white focus:outline-none' value={codeName} onChange={(e) => setCodeName(e.target.value)} onBlur={handleCodeNameChange} />
 
           </div>
 
@@ -458,23 +536,33 @@ function App() {
               <div className="fixed top-32 left-1/2 transform -translate-x-1/2 w-full max-w-md z-50 hide-scrollbar">
                 <div className="bg-gray-800 p-4 py-6 px-8 rounded-lg shadow-lg flex flex-col">
                   <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-white text-xl font-semibold">List of Saved Codes {savedCodes.length}</h2>
+                    <h2 className="text-white text-xl font-semibold">List of Saved Codes</h2>
                     <button className="bg-[#e31d3b] text-white px-3 py-1 rounded-md" onClick={onCloseViewCode}>
                       <IoClose/>
                     </button>
                   </div>
                   <ul className="text-white max-h-[50vh] overflow-y-auto hide-scrollbar">
-                    {Object.entries(savedCodes).map(([fileName, { language, code }]) => (
+                    {Object.entries(savedCodes).map(([fileName, { language, code }], index) => (
                       <li key={fileName}>
-                        <h3>{fileName}</h3>
-                        <p>Language: {language}</p>
-                        <pre className="text-white bg-gray-600 p-2 mt-2 rounded-md">{code}</pre>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-white">{index + 1}</span>
+                          <h3 className="text-white">{fileName}</h3>
+                          <div>
+                            <button className="bg-[#e31d3b] text-white px-2 py-1 rounded-md mr-2" onClick={()=>{handleViewCode(fileName)}}>
+                              View Code
+                            </button>
+                            <button className="bg-red-500 text-white px-2 py-1 rounded-md" onClick={()=>{handleDeleteCode(fileName)}}>
+                              Delete
+                            </button>
+                          </div>
+                        </div>
                       </li>
                     ))}
                   </ul>
                 </div>
               </div>
             )}
+
 
 
 
@@ -509,8 +597,25 @@ function App() {
             {/* INPUT */}
             <div className="h-[47vh] bg-[#272727]  rounded-md">
               {/* INPUT HEADER */}
-              <div className="h-[10%] pl-5 bg-[#303030] flex items-center">
+              <div className="h-[10%] pl-5 bg-[#303030] flex items-center justify-between">
                 <h3 className="text-white text-lg font-medium">Input</h3>
+                <div className='flex'>
+                  {/* Clear Button */}
+                  <button className='hover:bg-[#272727] border border-opacity-30 border-white h-[4vh] text-white px-3 rounded-3xl ml-5 flex justify-center items-center gap-1 text-[11px] font-bold uppercase' onClick={()=>inputRef.current.value = ""}>  
+                    Clear
+                  </button>
+
+                  {/** Download Button */}
+                  <button className='hover:bg-[#272727] border border-opacity-30 border-white h-[4vh] text-white px-3 rounded-3xl ml-3 flex justify-center items-center gap-1 text-[11px] font-bold uppercase' onClick={handleDownloadInput}>
+                    <FaDownload/> Download
+                  </button>
+
+                  {/* Choose Media Icon in Button */}
+                  <button className='hover:bg-[#272727] border border-opacity-30 border-white h-[4vh] mr-5 text-white px-3 rounded-3xl ml-3 flex justify-center items-center gap-1 text-[11px] font-bold uppercase'>
+                    <label htmlFor="fileUploader" className='cursor-pointer flex items-center gap-[2px] justify-center'><AiOutlineFile/> Read File</label>
+                  </button>
+                  <input id='fileUploader' className='hidden' type="file" accept=".txt" onChange={readFromFile} />
+                </div>
               </div>
 
               {/* INPUT BODY */}
