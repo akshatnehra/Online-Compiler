@@ -20,7 +20,6 @@ function App() {
   const [isCodeExistsModalOpen, setIsCodeExistsModalOpen] = useState(false); // Initialize with modal closed
   const [isViewCodeModalOpen, setIsViewCodeModalOpen] = useState(false); // Initialize with modal closed
   const [savedCodes, setSavedCodes] = useState({}); // Initialize with empty object
-  const [isEditorReady, setIsEditorReady] = useState(false); // Initialize with editor ready set to false
 
   useEffect(() => {
     // Get all saved codes from localStorage
@@ -31,12 +30,12 @@ function App() {
     if (Object.keys(savedCodes).length > 0) {
       setSavedCodes(savedCodes);
     }
-  });
+  }, []);
 
-  const handleOpenModal = () => {
-    // Open the modal when the save button is clicked
-    setIsModalOpen(true);
-  };
+  // const handleOpenModal = () => {
+  //   // Open the modal when the save button is clicked
+  //   setIsModalOpen(true);
+  // };
 
   const closeModal = () => {
     // Close the modal
@@ -50,13 +49,12 @@ function App() {
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
     editorRef.current.setValue(defaultCode);
-    setIsEditorReady(true);
   }
 
-  // Get the value of the editor
-  function showValue() {
-    alert(editorRef.current.getValue());
-  }
+  // // Get the value of the editor
+  // function showValue() {
+  //   alert(editorRef.current.getValue());
+  // }
 
   // Handle font size change
   const handleFontSizeChange = (event) => {
@@ -150,48 +148,55 @@ function App() {
 
     // If selected language is Javascript, run the code in the browser
     if (selectedLanguage === 'javascript') {
-
       // Get the input from the input textarea
       const INPUT = inputRef.current.value;
 
       // Get the code from the editor and store it in a variable
       const code = editorRef.current.getValue();
 
-      // Append input before running the code
-      const codeWithInput = `${INPUT}\n${code}`;
+      // Create a function that accepts input and executes the code
+      const executeCode = new Function('INPUT', code);
 
-      // Store the original console.log function
-      const originalConsoleLog = console.log;
+      try {
+        // Store the original console.log function
+        const originalConsoleLog = console.log;
 
-      // Create an array to capture log messages
-      const logMessages = [];
+        // Create an array to capture log messages
+        const logMessages = [];
 
-      // Override console.log to capture messages
-      console.log = function (...args) {
-        // Call the original console.log to display the message in the console
-        originalConsoleLog.apply(console, args);
+        // Override console.log to capture messages
+        console.log = function (...args) {
+          // Call the original console.log to display the message in the console
+          originalConsoleLog.apply(console, args);
 
-        // Store the message in the logMessages array
-        logMessages.push(args.join(' '));
-      };
+          // Store the message in the logMessages array 
+          logMessages.push(args.join(' '));
+        };
 
-      // Run the code
-      eval(code);
+        // Run the code with the input
+        executeCode(INPUT);
 
-      // Get the captured log messages
-      const result = logMessages.join('\n');
+        // Get the captured log messages
+        const result = logMessages.join('\n');
 
-      // Restore the original console.log function
-      console.log = originalConsoleLog;
+        // Restore the original console.log function
+        console.log = originalConsoleLog;
 
-      // Update the output state with the received result
-      setOutput(result);
+        // Update the output state with the received result
+        setOutput(result);
 
-      // After receiving the response, set loading back to false
-      setLoading(false);
+        // After receiving the response, set loading back to false
+        setLoading(false);
+      } catch (error) {
+        // Handle any errors that occur during code execution
+        console.error('Code Execution Error:', error);
+        // Set loading to false in case of an error
+        setLoading(false);
+      }
 
       return;
     }
+
   
     try {
       // Make the API request here
@@ -414,15 +419,13 @@ function App() {
 
     // Convert the updated object back to JSON and store it in localStorage
     localStorage.setItem('savedCodes', JSON.stringify(savedCodes));
+  
+    // Update the editor value with the default code for the selected language
+    editorRef.current.setValue(defaultCodes[selectedLanguage]);
 
-    // Check if same code is open in editor
-    if(codeName === codeName) {
-      // Update the editor value with the default code for the selected language
-      editorRef.current.setValue(defaultCodes[selectedLanguage]);
-
-      // Update the code name
-      setCodeName('code');
-    }
+    // Update the code name
+    setCodeName('code');
+    
   }
   
   return (
