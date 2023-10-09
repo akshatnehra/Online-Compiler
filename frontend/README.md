@@ -1,70 +1,124 @@
-# Getting Started with Create React App
+# Code Compiler App 🚀
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A powerful and user-friendly online code compiler that allows you to write, compile, and run code in various programming languages directly within your web browser.
 
-## Available Scripts
+![1696883593617](image/read/1696883593617.png)
 
-In the project directory, you can run:
+## Table of Contents
 
-### `npm start`
+- [Introduction](#introduction)
+- [Features](#features)
+- [Getting Started](#getting-started)
+- [Usage](#usage)
+- [Customization](#customization)
+- [Built-in Code Library](#built-in-code-library)
+- [Save Your Code](#save-your-code)
+- [Download Code and Output](#download-code-and-output)
+- [Contributing](#contributing)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Introduction 📚
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+The Code Compiler App simplifies the process of coding, compiling, and testing your programs. Whether you're a student, developer, or coding enthusiast, this app offers a seamless way to write and run code without the need for complex setups.
 
-### `npm test`
+## Features 🌟
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- **Multi-language Support:** Compile and run code in languages such as C, C++, Python, Java, and JavaScript.
+- **Real-time Output:** See instant feedback on your code's output.
+- **User-Friendly Interface:** An intuitive code editor and output console.
+- **Customizable Themes:** Choose from different themes (Dark, Light, and High-Contrast Black) to suit your coding environment.
+- **Adjustable Font Size:** Customize the editor's font size for better readability.
+- **Built-in Code Library:** Get a head start with prewritten code templates for various programming languages when you select a language.
+- **Rename Code:** Give your code a unique name for easy management.
+- **Reset Code:** Quickly reset your code to its initial state.
+- **Clear Input/Output:** Clear input and output with a single click.
+- **Download Input:** Download your input data as a text file for documentation.
+- **Load Input from Other Files:** Easily load input from external text files.
+- **Save and Manage Your Code:** Save your code snippets, manage them, and reuse them later.
+- **Download Code and Output:** Download your code and the corresponding output.
 
-### `npm run build`
+## Getting Started 🚀
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Prerequisites
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Before using the Code Compiler App, ensure you have the following prerequisites:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- Node.js
+- npm or yarn
 
-### `npm run eject`
+### Installation
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+1. Clone this repository to your local machine.
+2. Install project dependencies using npm or yarn (for both frontend and backend):
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+   ```
+   npm install
+   # or
+   yarn install
+   ```
+3. Start the development server (both frontend and backend):
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+   ```
+   npm run dev
+   # or
+   yarn run dev
+   ```
+4. Open your web browser and access the app at `http://localhost:3000` (by default).
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Usage 🖋️
 
-## Learn More
+Using the Code Compiler App is straightforward:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+1. Choose your desired programming language from the dropdown menu.
+2. Write or paste your code in the editor on the left.
+3. Add inputs on the right (if any).
+4. Optionally, adjust the font size, theme, and other preferences.
+5. Click the "Run" button to compile and execute your code.
+6. View the real-time output in the console on the right.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Usage Example
 
-### Code Splitting
+![1696885420964](image/read/1696885420964.mp4)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Customization 🎨
 
-### Analyzing the Bundle Size
+### Font Size
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+You can customize the font size of the code editor for better readability. Simply select the desired font size from the dropdown menu.
 
-### Making a Progressive Web App
+### Themes
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+The app offers multiple themes for the code editor, including Dark, Light, and High-Contrast Black. Choose the theme that suits your coding preferences.
 
-### Advanced Configuration
+### Built-in Code Library
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Access the built-in code library to quickly load default code snippets for various programming languages. Select a language and it automatically loads with the default code.
 
-### Deployment
+## Save Your Code 💾
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+Easily save your code snippets for future use:
 
-### `npm run build` fails to minify
+1. Enter a name for your code in the provided input field.
+2. Click the "Save Code" button to save your code locally.
+3. Manage and view your saved code snippets in the "View Codes" section.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Download Code and Output 📥
+
+Download your code and output for further analysis or sharing:
+
+- Use the "Download" button to save your code as a text file with the appropriate file extension.
+- Download the input and output as separate text files for documentation purposes.
+
+## Contributing 🤝
+
+We welcome contributions from the community! If you'd like to contribute to the Code Compiler App, please follow these steps:
+
+1. Fork this repository.
+2. Create a new branch for your feature or bug fix.
+3. Make your changes and test thoroughly.
+4. Submit a pull request with a clear description of your changes.
+
+
+
+
+
+I hope you enjoy using the Code Compiler App! It provides a hassle-free environment for coding and testing your programs. If you encounter any issues or have feedback, please let us know.
