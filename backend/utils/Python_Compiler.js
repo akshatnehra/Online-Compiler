@@ -36,6 +36,14 @@ async function compileAndRunCode(code, input) {
   } catch (err) {
     // Delete the temporary Python file
     await fs.unlink(pythonScriptPath);
+    
+    // Remove first line of error message
+    const lines = err.split('\n');
+    lines.shift();
+    err = lines.join('\n');
+
+    console.log(err);
+    return err;
     throw err;
   }
 }

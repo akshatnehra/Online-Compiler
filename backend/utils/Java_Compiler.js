@@ -24,7 +24,8 @@ async function compileAndRunCode(code, input) {
     await new Promise((resolve, reject) => {
       exec(compileCommand, (compileError) => {
         if (compileError) {
-          reject('Compilation error: ' + compileError);
+          const formattedError = formatCompilationError(compileError, javaScriptPath);
+          reject(formattedError);
         } else {
           resolve();
         }
@@ -54,6 +55,8 @@ async function compileAndRunCode(code, input) {
     // Delete the temporary folder
     await fs.rm(folderPath, { recursive: true });
     
+    console.log(err);
+    return err;
     throw err;
   }
 }
@@ -92,6 +95,21 @@ async function compileAndRunCode(code, input) {
 //     console.error('Error:', error);
 //   }
 // })();
+
+function formatCompilationError(error, cScriptPath) {
+  let formattedError = String(error).replace(new RegExp(escapeRegExp(cScriptPath), 'g'), 'Line');
+
+  // Remove first line of error message
+  const lines = formattedError.split('\n');
+  lines.shift();
+  formattedError = lines.join('\n');
+  
+  return formattedError;
+}
+
+function escapeRegExp(string) {
+  return string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
+}
 
 // Export the compileAndRunCode function
 module.exports.compileJava = compileAndRunCode;

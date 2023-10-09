@@ -32,10 +32,10 @@ function App() {
     }
   }, []);
 
-  // const handleOpenModal = () => {
-  //   // Open the modal when the save button is clicked
-  //   setIsModalOpen(true);
-  // };
+  const handleOpenModal = () => {
+    // Open the modal when the save button is clicked
+    setIsModalOpen(true);
+  };
 
   const closeModal = () => {
     // Close the modal
@@ -51,10 +51,10 @@ function App() {
     editorRef.current.setValue(defaultCode);
   }
 
-  // // Get the value of the editor
-  // function showValue() {
-  //   alert(editorRef.current.getValue());
-  // }
+  // Get the value of the editor
+  function showValue() {
+    alert(editorRef.current.getValue());
+  }
 
   // Handle font size change
   const handleFontSizeChange = (event) => {
@@ -154,42 +154,56 @@ function App() {
       // Get the code from the editor and store it in a variable
       const code = editorRef.current.getValue();
 
-      // Create a function that accepts input and executes the code
-      const executeCode = new Function('INPUT', code);
-
       try {
-        // Store the original console.log function
-        const originalConsoleLog = console.log;
-
-        // Create an array to capture log messages
+        // Create an array to capture log messages and errors
         const logMessages = [];
+        const logErrors = [];
 
         // Override console.log to capture messages
+        const originalConsoleLog = console.log;
         console.log = function (...args) {
           // Call the original console.log to display the message in the console
           originalConsoleLog.apply(console, args);
 
-          // Store the message in the logMessages array 
+          // Store the message in the logMessages array
           logMessages.push(args.join(' '));
         };
 
-        // Run the code with the input
-        executeCode(INPUT);
+        // Override console.error to capture errors
+        const originalConsoleError = console.error;
+        console.error = function (...args) {
+          // Call the original console.error to display the error in the console
+          originalConsoleError.apply(console, args);
 
-        // Get the captured log messages
-        const result = logMessages.join('\n');
+          // Store the error message in the logErrors array
+          logErrors.push(args.join(' '));
+        };
 
-        // Restore the original console.log function
+        // Use a try-catch block to capture errors during code execution
+        try {
+          // Run the code with the input
+          new Function('INPUT', code)(INPUT);
+        } catch (error) {
+          // Handle any errors that occur during code execution
+          logErrors.push('Code Execution Error: ' + error.message);
+        }
+
+        // Restore the original console.log and console.error functions
         console.log = originalConsoleLog;
+        console.error = originalConsoleError;
 
-        // Update the output state with the received result
-        setOutput(result);
+        // Get the captured log messages and errors
+        const result = logMessages.join('\n');
+        const errorResult = logErrors.join('\n');
+
+        // Update the output state with the received result and errors
+        setOutput(result + '\n' + errorResult);
 
         // After receiving the response, set loading back to false
         setLoading(false);
       } catch (error) {
-        // Handle any errors that occur during code execution
-        console.error('Code Execution Error:', error);
+        // Handle any other errors that may occur
+        console.error('Error:', error);
         // Set loading to false in case of an error
         setLoading(false);
       }
@@ -315,6 +329,9 @@ function App() {
       // Convert the updated object back to JSON and store it in localStorage
       localStorage.setItem('savedCodes', JSON.stringify(savedCodes));
 
+      // Change state
+      setSavedCodes(savedCodes);
+
       // Show the "Code saved successfully" modal
       setIsModalOpen(true);
 
@@ -417,15 +434,20 @@ function App() {
     // Delete the code from the saved codes object
     delete savedCodes[codeName];
 
+    // Change state
+    setSavedCodes(savedCodes);
+
     // Convert the updated object back to JSON and store it in localStorage
     localStorage.setItem('savedCodes', JSON.stringify(savedCodes));
-  
-    // Update the editor value with the default code for the selected language
-    editorRef.current.setValue(defaultCodes[selectedLanguage]);
 
-    // Update the code name
-    setCodeName('code');
-    
+    // Check if same code is open in editor
+    if(codeName === codeName) {
+      // Update the editor value with the default code for the selected language
+      editorRef.current.setValue(defaultCodes[selectedLanguage]);
+
+      // Update the code name
+      setCodeName('code');
+    }
   }
   
   return (
@@ -447,7 +469,7 @@ function App() {
             {/* Dropdown for selecting text size */}
             <label className='text-white ml-10 text-sm font-bold'>Font Size: </label>
             <select
-              className='bg-white text-gray-900 ml-3 rounded-md p-1 outline-none'
+              className='bg-[#383838] text-white ml-3 rounded-md p-1 outline-none'
               value={fontSize}
               onChange={handleFontSizeChange}
             >
@@ -461,7 +483,7 @@ function App() {
             {/* Dropdown for selecting theme */}
             <label className='text-white ml-5 text-sm font-bold'>Theme: </label>
             <select
-              className='bg-white text-gray-900 ml-3 rounded-md p-1 w-20 outline-none'
+              className='bg-[#383838] text-white ml-3 rounded-md p-1 w-20 outline-none'
               value={selectedTheme}
               onChange={handleThemeChange}
             >
@@ -475,7 +497,7 @@ function App() {
             {/* Dropdown for selecting programming language */}
             <label className='text-white ml-5 text-sm font-bold'>Language: </label>
             <select
-              className='bg-white text-gray-900 ml-3 rounded-md p-1 w-24 outline-none'
+              className='bg-[#383838] text-white ml-3 rounded-md p-1 w-24 outline-none'
               value={selectedLanguage}
               onChange={handleLanguageChange}
             >

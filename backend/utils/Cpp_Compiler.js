@@ -21,7 +21,8 @@ async function compileAndRunCode(code, input) {
     await new Promise((resolve, reject) => {
       exec(compileCommand, (compileError) => {
         if (compileError) {
-          reject('Compilation error: ' + compileError);
+          const formattedError = formatCompilationError(compileError, cppScriptPath);
+          reject(formattedError);
         } else {
           resolve();
         }
@@ -31,7 +32,7 @@ async function compileAndRunCode(code, input) {
     const output = await new Promise((resolve, reject) => {
       const child = exec(executionCommand, (error, stdout, stderr) => {
         if (error) {
-          reject(stderr);
+          reject(stderr.trim());
         } else {
           resolve(stdout);
         }
@@ -57,7 +58,8 @@ async function compileAndRunCode(code, input) {
 
     // Delete the temporary C++ file
     await fs.unlink(cppScriptPath);
-
+    console.log(err);
+    return err;
     // If windows, delete the temporary executable file
     // if (process.platform === 'win32') {
     //   // Check if the file exists before deleting it
@@ -108,6 +110,21 @@ async function compileAndRunCode(code, input) {
 //     console.error('Error:', error);
 //   }
 // })();
+
+function formatCompilationError(error, cScriptPath) {
+  let formattedError = String(error).replace(new RegExp(escapeRegExp(cScriptPath), 'g'), 'Line');
+
+  // Remove first line of error message
+  const lines = formattedError.split('\n');
+  lines.shift();
+  formattedError = lines.join('\n');
+
+  return formattedError;
+}
+
+function escapeRegExp(string) {
+  return string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
+}
 
 // Export the compileAndRunCode function
 module.exports.compileCpp = compileAndRunCode;

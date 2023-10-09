@@ -1,4 +1,4 @@
-const supportedLanguages = ['c', 'cpp', 'java', 'python'];
+const supportedLanguages = ['c', 'cpp', 'java', 'python, javascript'];
 
 // Export Supported Languages   
 exports.supportedLanguages = function (req, res) {  
