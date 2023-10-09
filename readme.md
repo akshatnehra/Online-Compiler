@@ -1,3 +1,4 @@
+
 # Code Compiler App 🚀
 
 A powerful and user-friendly online code compiler that allows you to write, compile, and run code in various programming languages directly within your web browser.
@@ -77,7 +78,7 @@ Using the Code Compiler App is straightforward:
 
 ### Usage Example
 
-![1696885420964](image/read/1696885420964.mp4)
+![1696886931655](image/read/1696886931655.gif)
 
 ## Customization 🎨
 
@@ -110,15 +111,11 @@ Download your code and output for further analysis or sharing:
 
 ## Contributing 🤝
 
-We welcome contributions from the community! If you'd like to contribute to the Code Compiler App, please follow these steps:
+I welcome contributions from the community! If you'd like to contribute to the Code Compiler App, please follow these steps:
 
 1. Fork this repository.
 2. Create a new branch for your feature or bug fix.
 3. Make your changes and test thoroughly.
 4. Submit a pull request with a clear description of your changes.
-
-
-
-
 
 I hope you enjoy using the Code Compiler App! It provides a hassle-free environment for coding and testing your programs. If you encounter any issues or have feedback, please let us know.
