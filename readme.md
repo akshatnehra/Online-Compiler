@@ -1,7 +1,7 @@
 
 # Code Compiler App 🚀
 
-[![Deployment URL](https://online-compiler-app-frontend.onrender.com/)]
+[Deployment URL](https://online-compiler-app-frontend.onrender.com/)]
 
 **Note:** Please be aware of the following:
 
