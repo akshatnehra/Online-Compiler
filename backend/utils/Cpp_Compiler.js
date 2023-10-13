@@ -2,18 +2,13 @@ const { exec } = require('child_process');
 const fs = require('fs').promises;
 const path = require('path');
 
-async function compileAndRunCode(code, input) {
-  
-  // Create a temporary C++ file name using the current time in milliseconds
-  const name = Date.now();
-
-  // Create a temporary C++ file
-  const cppScriptPath = path.join(__dirname, name + '.cpp');
-  const outFilePath = path.join(__dirname, name + "");
-
+async function compileAndRunCode(code, input, timeoutMilliseconds, tempDirPath) {
   try {
-    await fs.writeFile(cppScriptPath, code);
+    // Create a temporary C++ file
+    const cppScriptPath = path.join(tempDirPath, 'main.cpp');
+    const outFilePath = path.join(tempDirPath, 'main');
 
+    await fs.writeFile(cppScriptPath, code);
 
     const compileCommand = `g++ ${cppScriptPath} -o ${outFilePath}`;
     const executionCommand = `${outFilePath}`;
@@ -41,80 +36,67 @@ async function compileAndRunCode(code, input) {
       // Send the input to the child process's stdin
       child.stdin.write(input);
       child.stdin.end();
+
+      // Set a timeout for the C++ script execution
+      const timeout = setTimeout(() => {
+        child.kill(); // Terminate the C++ script
+        reject("Time Limit Exceeded!");
+      }, timeoutMilliseconds);
+
+      child.on("exit", () => {
+        clearTimeout(timeout); // Clear the timeout when the script exits
+      });
+
     });
 
     // Delete the temporary C++ file
     await fs.unlink(cppScriptPath);
 
-    // If windows, delete the temporary executable file
+    // If Windows, delete the temporary executable file
     if (process.platform === 'win32') {
-      await fs.unlink(outFilePath + '.exe');
+      const exePath = outFilePath + '.exe';
+      if (await fileExists(exePath)) {
+        await fs.unlink(exePath);
+      }
     } else {
-      await fs.unlink(outFilePath);
+      if (await fileExists(outFilePath)) {
+        await fs.unlink(outFilePath);
+      }
     }
 
     return output;
   } catch (err) {
-
-    // Delete the temporary C++ file
-    await fs.unlink(cppScriptPath);
-    console.log(err);
-    return err;
-    // If windows, delete the temporary executable file
-    // if (process.platform === 'win32') {
-    //   // Check if the file exists before deleting it
-    //   if(fs.existsSync(outFilePath + '.exe'))
-    //     await fs.unlink(outFilePath + '.exe');
-    // } else {
-    //   // Check if the file exists before deleting it
-    //   if(fs.existsSync(outFilePath))
-    //     await fs.unlink(outFilePath);
-    // }
-
-    throw err;
+    // Handle errors and cleanup here
+    return handleErrors(err, tempDirPath);
   }
 }
 
-// // Example usage for C++:
-// (async () => {
-//   try {
-//     const userCode = `
-// #include <iostream>
-// using namespace std;
+async function fileExists(filePath) {
+  try {
+    await fs.promises.access(filePath, fs.constants.F_OK);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
 
-// int main() {
-//     string name;
-//     cout << "Enter your name: ";
-//     cin >> name;
-//     cout << "Hello, " << name << endl;
+async function handleErrors(err, tempDirPath) {
 
-//     cin >> name;
-//     cout << "Hello, " << name << endl;
+  if (err === "Time Limit Exceeded!") {
+    return err;
+  }
 
-//     cin >> name;
-//     cout << "Hello, " << name << endl;
-//     return 0;
-// }
-// `;
-
-//     const savedInput = `John
-// Wick
-// Alice`;
-
-//     console.log('Saved Input:');
-//     console.log(savedInput);
-
-//     const output = await compileAndRunCode(userCode, savedInput);
-//     console.log('Output:', output);
-//   } catch (error) {
-//     console.error('Error:', error);
-//   }
-// })();
+  // Handle other errors, such as compilation errors
+  const lines = err.split('\n');
+  lines.shift(); // Remove the first line of the error message
+  const errorMessage = lines.join('\n');
+  return errorMessage;
+}
 
 function formatCompilationError(error, cScriptPath) {
   let formattedError = String(error).replace(new RegExp(escapeRegExp(cScriptPath), 'g'), 'Line');
 
-  // Remove first line of error message
+  // Remove the first line of the error message
   const lines = formattedError.split('\n');
   lines.shift();
   formattedError = lines.join('\n');

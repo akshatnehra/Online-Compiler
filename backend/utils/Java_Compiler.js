@@ -1,4 +1,5 @@
 const { exec } = require('child_process');
+const { log } = require('console');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -60,6 +61,8 @@ async function compileAndRunCode(code, input, timeoutMilliseconds) {
 
     return output;
   } catch (err) {
+
+    console.log(err);
     // Delete the temporary folder
     await fs.rm(folderPath, { recursive: true });
 

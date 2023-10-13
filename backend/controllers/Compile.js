@@ -52,9 +52,9 @@ const compileCode = async (code, language, input, tempDir) => {
 
     switch (language) {
         case 'c':
-            return await compileC(code, input, tempDir, timeout);
+            return await compileC(code, input, timeout, tempDir);
         case 'cpp':
-            return await compileCpp(code, input, timeout);
+            return await compileCpp(code, input, timeout, tempDir);
         case 'java':
             return await compileJava(code, input, timeout);
         case 'python':

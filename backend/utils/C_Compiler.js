@@ -2,18 +2,12 @@ const { exec } = require('child_process');
 const fs = require('fs').promises;
 const path = require('path');
 
-async function compileAndRunCode(code, input, tempDir, timeout) {
-  // Create a temporary C file name using the current time in milliseconds
-  const name = Date.now();
-
-  // Create a temporary C file inside the provided temp directory
-  const cScriptPath = path.join(tempDir, `${name}.c`);
-  const outFilePath = path.join(tempDir, `${name}`);
-
-  // Create a variable to hold the child process
-  let childProcess;
-
+async function compileAndRunCode(code, input, timeoutMilliseconds, tempDirPath) {
   try {
+    // Create a temporary C file
+    const cScriptPath = path.join(tempDirPath, 'main.c');
+    const outFilePath = path.join(tempDirPath, 'main');
+
     await fs.writeFile(cScriptPath, code);
 
     const compileCommand = `gcc ${cScriptPath} -o ${outFilePath}`;
@@ -31,7 +25,7 @@ async function compileAndRunCode(code, input, tempDir, timeout) {
     });
 
     const output = await new Promise((resolve, reject) => {
-      childProcess = exec(executionCommand, (error, stdout, stderr) => {
+      const child = exec(executionCommand, (error, stdout, stderr) => {
         if (error) {
           reject(stderr.trim());
         } else {
@@ -40,35 +34,62 @@ async function compileAndRunCode(code, input, tempDir, timeout) {
       });
 
       // Send the input to the child process's stdin
-      childProcess.stdin.write(input);
-      childProcess.stdin.end();
+      child.stdin.write(input);
+      child.stdin.end();
 
-      // Set a timeout for the child process (e.g., 5 seconds)
-      const timeoutHandle = setTimeout(() => {
-        childProcess.kill(); // Terminate the child process
-        reject('Time Limit Exceeded');
-      }, timeout); // Adjust the timeout duration as needed
+      // Set a timeout for the C script execution
+      const timeout = setTimeout(() => {
+        child.kill(); // Terminate the C script
+        reject("Time Limit Exceeded!");
+      }, timeoutMilliseconds);
 
-      // Handle the child process's exit event
-      childProcess.on('exit', () => {
-        clearTimeout(timeoutHandle); // Clear the timeout
+      child.on("exit", () => {
+        clearTimeout(timeout); // Clear the timeout when the script exits
       });
     });
 
-    return output;
-  } catch (err) {
-    console.error('Error during code execution:', err);
-    return err;
-  } finally {
-    // Ensure that the child process is terminated before continuing
-    if (childProcess) {
-      console.log('====================================');
-      console.log('Killing child process');
-      console.log('====================================');
-      await childProcess.kill('SIGKILL');
+    // Delete the temporary C file
+    await fs.unlink(cScriptPath);
+
+    // If Windows, delete the temporary executable file
+    if (process.platform === 'win32') {
+      const exePath = outFilePath + '.exe';
+      if (await fileExists(exePath)) {
+        await fs.unlink(exePath);
+      }
+    } else {
+      if (await fileExists(outFilePath)) {
+        await fs.unlink(outFilePath);
+      }
     }
 
+    return output;
+  } catch (err) {
+    // Handle errors and cleanup here
+    return handleErrors(err, tempDirPath);
   }
+}
+
+async function fileExists(filePath) {
+  try {
+    await fs.promises.access(filePath, fs.constants.F_OK);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+async function handleErrors(err, tempDirPath) {
+
+  if (err === "Time Limit Exceeded!") {
+    return err;
+  }
+
+  // Handle other errors, such as compilation errors
+  const lines = err.split('\n');
+  lines.shift(); // Remove the first line of the error message
+  const errorMessage = lines.join('\n');
+  return errorMessage;
 }
 
 function formatCompilationError(error, cScriptPath) {
@@ -86,4 +107,5 @@ function escapeRegExp(string) {
   return string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
 }
 
+// Export the compileAndRunCCode function
 module.exports.compileC = compileAndRunCode;
