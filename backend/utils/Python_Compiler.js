@@ -2,10 +2,9 @@ const { exec } = require('child_process');
 const fs = require('fs').promises;
 const path = require('path');
 
-async function compileAndRunCode(code, input) {
-
+async function compileAndRunCode(code, input, timeoutMilliseconds) {
   // Create a temporary Python file name using the current time in milliseconds
-    const name = Date.now();
+  const name = Date.now();
 
   // Create a temporary Python file
   const pythonScriptPath = path.join(__dirname, name + '.py');
@@ -27,8 +26,18 @@ async function compileAndRunCode(code, input) {
       // Send the input to the child process's stdin
       child.stdin.write(input);
       child.stdin.end();
+
+      // Set a timeout for the Python script execution
+      const timeout = setTimeout(() => {
+        child.kill(); // Terminate the Python script
+        reject("Time Limit Exceeded!");
+      }, timeoutMilliseconds);
+
+      child.on("exit", () => {
+        clearTimeout(timeout); // Clear the timeout when the script exits
+      });
     });
-    
+
     // Delete the temporary Python file
     await fs.unlink(pythonScriptPath);
 
@@ -36,7 +45,11 @@ async function compileAndRunCode(code, input) {
   } catch (err) {
     // Delete the temporary Python file
     await fs.unlink(pythonScriptPath);
-    
+
+    if(err == "Time Limit Exceeded!") {
+      return err;
+    }
+
     // Remove first line of error message
     const lines = err.split('\n');
     lines.shift();
@@ -48,33 +61,9 @@ async function compileAndRunCode(code, input) {
   }
 }
 
-// // Example usage for Python:
-// (async () => {
-//   try {
-//     const userCode = `
-// name = input("Enter your name: ")
-// print("Hello, " + name)
-
-// name = input("Enter your name: ")
-// print("Hello, " + name)
-
-// name = input("Enter your name: ")
-// print("Hello, " + name)
-// `;
-
-//     const savedInput = `John
-// Wick
-// Alice`;
-
-//     console.log('Saved Input:');
-//     console.log(savedInput);
-
-//     const output = await compileAndRunCode(userCode, savedInput);
-//     console.log('Output:', output);
-//   } catch (error) {
-//     console.error('Error:', error);
-//   }
-// })();
+// Example usage with a 5-second timeout:
+// const timeoutMilliseconds = 5000;
+// const output = await compileAndRunCode(userCode, savedInput, timeoutMilliseconds);
 
 // Export the compileAndRunCode function
 module.exports.compilePython = compileAndRunCode;

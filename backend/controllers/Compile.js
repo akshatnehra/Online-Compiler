@@ -2,49 +2,62 @@ const { compileC } = require('../utils/C_Compiler');
 const { compileCpp } = require('../utils/Cpp_Compiler');
 const { compileJava } = require('../utils/Java_Compiler');
 const { compilePython } = require('../utils/Python_Compiler');
+const path = require('path');
+const fs = require('fs').promises;
+const fsExtra = require('fs-extra');
+const { time } = require('console');
 
-exports.compile = async function(req, res){
+exports.compile = async function(req, res) {
     try {
-        // Get code, language and input from request body   
-        const { code, language, input } = req.body;
+      const { code, language, input } = req.body;
+  
+      if (!code || !language) {
+        return res.status(400).send('Bad Request');
+      }
+  
+      if (!['c', 'cpp', 'java', 'python'].includes(language)) {
+        return res.status(400).send('Bad Request');
+      }
+  
+      // Create a temporary directory using the current time
+      const tempDir = path.join(__dirname, `${Date.now()}`);
+      await fs.mkdir(tempDir, { recursive: true });
+  
+      // Compile code and store the result
+      let result = await compileCode(code, language, input, tempDir);
+  
+      // Send result
+      res.status(200).json({
+        status: 'success',
+        result: result,
+      });
 
-        // Check if code, language and input are provided
-        if (!code || !language) {
-            return res.status(400).send('Bad Request');
-        }
-
-        // Check if language is supported
-        if (!['c', 'cpp', 'java', 'python'].includes(language)) {
-            return res.status(400).send('Bad Request');
-        }
-
-        // Compile code
-        let result = await compileCode(code, language, input);
-
-        // Send result  
-        res.status(200).json({
-            status: 'success',
-            result: result,
-        });
+      // Force delete the temporary directory and its contents even if file is in use
+  
+      // Delete the temporary directory and its contents
+      await fs.rm(tempDir, { recursive: true });
+        // await fsExtra.remove(tempDir);
     } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            status: 'error',
-            result: error.message,
-        });
+      console.log(error);
+      res.status(500).json({
+        status: 'error',
+        result: error.message,
+      });
     }
-}
+  }
 
 // Compile code
-const compileCode = async (code, language, input) => {
+const compileCode = async (code, language, input, tempDir) => {
+    const timeout = 5000;
+
     switch (language) {
         case 'c':
-            return await compileC(code, input);
+            return await compileC(code, input, tempDir, timeout);
         case 'cpp':
-            return await compileCpp(code, input);
+            return await compileCpp(code, input, timeout);
         case 'java':
-            return await compileJava(code, input);
+            return await compileJava(code, input, timeout);
         case 'python':
-            return await compilePython(code, input);
+            return await compilePython(code, input, timeout);
     }
 }
