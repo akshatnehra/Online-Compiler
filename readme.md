@@ -8,7 +8,7 @@
 1. **Java Compatibility:** Java Programs may not work on the LIVE Website since it's hosted on the free tier of Render, which does not allow the installation of Java. However, the good news is that it should work perfectly when run locally on your system.
 
 2. **Initial Loading Time:** Please be patient during the initial loading of the application. Due to the limitations of the free tier, the service may spin down after 15 minutes of inactivity. As a result, the first request after the service is spun down might take around 30 seconds to complete. Subsequent requests should be significantly faster.
-
+---
 
 A powerful and user-friendly online code compiler that allows you to write, compile, and run code in various programming languages directly within your web browser.
 
